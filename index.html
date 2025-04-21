@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Team Assessment Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+            background: linear-gradient(to bottom, #1e40af, #2563eb);
+        }
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .nav-link {
+            transition: background 0.3s ease, padding-left 0.3s ease;
+        }
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            padding-left: 1.5rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        h1, h2 {
+            font-family: 'Playfair Display', serif;
+        }
+        .custom-dropdown {
+            position: relative;
+        }
+        .custom-dropdown-button {
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        .custom-dropdown-button:hover {
+            border-color: #4f46e5;
+        }
+        .custom-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .custom-dropdown-menu.show {
+            display: block;
+        }
+        .custom-dropdown-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .custom-dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 w-64 text-white sidebar z-50">
+        <div class="p-6">
+            <h2 class="text-3xl font-bold text-center">QA Royal Dashboard</h2>
+        </div>
+        <nav class="mt-6">
+            <a href="#dashboard" class="block px-6 py-3 text-lg nav-link">Dashboard</a>
+            <a href="#input" class="block px-6 py-3 text-lg nav-link">Add Assessment</a>
+            <a href="#history" class="block px-6 py-3 text-lg nav-link">History</a>
+            <a href="#analytics" class="block px-6 py-3 text-lg nav-link">Analytics</a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-64 p-8">
+        <button onclick="toggleSidebar()" class="mb-6 p-3 bg-indigo-900 text-white rounded-full btn">☰ Menu</button>
+        
+        <h1 class="text-5xl font-bold text-white mb-10 text-center" id="dashboard">QA Team Assessment Dashboard</h1>
+
+        <!-- Input Form -->
+        <div class="card p-8 mb-10" id="input">
+            <h2 class="text-3xl font-semibold text-indigo-900 mb-6">Add Weekly Assessment</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="custom-dropdown">
+                    <button class="custom-dropdown-button" id="teamMemberButton" data-value="Aswathi M Ashok" onclick="toggleDropdown('teamMember')">
+                        Aswathi M Ashok
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="custom-dropdown-menu" id="teamMemberMenu">
+                        <div class="custom-dropdown-item" onclick="selectDropdownOption('teamMember', 'Aswathi M Ashok')">Aswathi M Ashok</div>
+                        <div class="custom-dropdown-item" onclick="selectDropdownOption('teamMember', 'Minnu Sebastian')">Minnu Sebastian</div>
+                    </div>
+                </div>
+                <input id="week" type="week" placeholder="Select Week" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <input id="date" type="date" placeholder="Select Date" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <input id="timelines" type="number" step="0.1" min="0" max="5" placeholder="Project Timelines (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <input id="attitude" type="number" step="0.1" min="0" max="5" placeholder="Attitude (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <input id="thinking" type="number" step="0.1" min="0" max="5" placeholder="Creative/Logical Thinking (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <input id="communication" type="number" step="0.1" min="0" max="5" placeholder="Communication (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <input id="quality" type="number" step="0.1" min="0" max="5" placeholder="Quality of Work (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <textarea id="comments" placeholder="Comments/Feedback" class="border p-3 rounded-lg w-full col-span-2 bg-gray-50 h-32 focus:ring-2 focus:ring-indigo-500 transition"></textarea>
+            </div>
+            <button onclick="addAssessment()" class="mt-6 bg-indigo-900 text-white px-8 py-3 rounded-lg btn">Submit Assessment</button>
+        </div>
+
+        <!-- Best Employee -->
+        <div class="card p-8 mb-10">
+            <h2 class="text-3xl font-semibold text-indigo-900 mb-6">Best Employee</h2>
+            <div class="flex space-x-4 mb-4">
+                <div class="custom-dropdown w-full max-w-xs">
+                    <button class="custom-dropdown-button" id="bestEmployeeWeekButton" data-value="" onclick="toggleDropdown('bestEmployeeWeek')">
+                        Select Week
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="custom-dropdown-menu" id="bestEmployeeWeekMenu">
+                        <div class="custom-dropdown-item" onclick="selectDropdownOption('bestEmployeeWeek', '')">Select Week</div>
+                    </div>
+                </div>
+                <div class="custom-dropdown w-full max-w-xs">
+                    <button class="custom-dropdown-button" id="bestEmployeeDateButton" data-value="" onclick="toggleDropdown('bestEmployeeDate')">
+                        Select Date
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="custom-dropdown-menu" id="bestEmployeeDateMenu">
+                        <div class="custom-dropdown-item" onclick="selectDropdownOption('bestEmployeeDate', '')">Select Date</div>
+                    </div>
+                </div>
+            </div>
+            <p id="bestEmployee" class="text-lg text-gray-700 mb-6"></p>
+            <div class="chart-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Assessment Table -->
+        <div class="card p-8 mb-10" id="history">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-semibold text-indigo-900">Assessment History</h2>
+                <button onclick="exportReport()" class="bg-green-600 text-white px-6 py-3 rounded-lg btn">Export Report (CSV)</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-indigo-100">
+                            <th class="border p-3 text-left">Week</th>
+                            <th class="border p-3 text-left">Date</th>
+                            <th class="border p-3 text-left">Team Member</th>
+                            <th class="border p-3 text-left">Timelines</th>
+                            <th class="border p-3 text-left">Attitude</th>
+                            <th class="border p-3 text-left">Thinking</th>
+                            <th class="border p-3 text-left">Communication</th>
+                            <th class="border p-3 text-left">Quality</th>
+                            <th class="border p-3 text-left">Total Score</th>
+                            <th class="border p-3 text-left">Performance</th>
+                            <th class="border p-3 text-left">Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assessmentTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Performance Analytics -->
+        <div class="card p-8" id="analytics">
+            <h2 class="text-3xl font-semibold text-indigo-900 mb-6">Performance Trends</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="chart-container">
+                    <canvas id="lineChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Replace with your SheetDB API URL
+        const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/95u4gr0g7m5i2'; // Replace YOUR_API_ID with your SheetDB API ID
+
+        let lineChartInstance = null;
+        let barChartInstance = null;
+        let radarChartInstance = null;
+
+        // Initialize the page by loading assessments
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAssessments();
+        });
+
+        function getPerformanceRating(score) {
+            if (score <= 2.5) return 'Needs Improvement';
+            if (score <= 3.5) return 'Avg Performer';
+            if (score <= 4.5) return 'Good Performer';
+            return 'Excellent';
+        }
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('sidebar-hidden');
+        }
+
+        function toggleDropdown(id) {
+            const menu = document.getElementById(`${id}Menu`);
+            const isOpen = menu.classList.contains('show');
+            closeAllDropdowns();
+            if (!isOpen) {
+                menu.classList.add('show');
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('.custom-dropdown-menu').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+
+        function selectDropdownOption(id, value) {
+            const button = document.getElementById(`${id}Button`);
+            button.setAttribute('data-value', value);
+            button.firstChild.textContent = value || `Select ${id.replace('bestEmployee', '')}`;
+            closeAllDropdowns();
+            if (id === 'bestEmployeeWeek' || id === 'bestEmployeeDate') {
+                showBestEmployee();
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-dropdown')) {
+                closeAllDropdowns();
+            }
+        });
+
+        async function addAssessment() {
+            const week = document.getElementById('week').value;
+            const date = document.getElementById('date').value;
+            const teamMember = document.getElementById('teamMemberButton').getAttribute('data-value');
+            const timelines = parseFloat(document.getElementById('timelines').value);
+            const attitude = parseFloat(document.getElementById('attitude').value);
+            const thinking = parseFloat(document.getElementById('thinking').value);
+            const communication = parseFloat(document.getElementById('communication').value);
+            const quality = parseFloat(document.getElementById('quality').value);
+            const comments = document.getElementById('comments').value;
+
+            // Validate inputs
+            if (!week || !date || !teamMember) {
+                alert('Please fill all required fields (Week, Date, Team Member).');
+                return;
+            }
+            if (isNaN(timelines) || isNaN(attitude) || isNaN(thinking) || isNaN(communication) || isNaN(quality)) {
+                alert('Please provide valid scores for all metrics.');
+                return;
+            }
+            if ([timelines, attitude, thinking, communication, quality].some(score => score < 0 || score > 5)) {
+                alert('Scores must be between 0 and 5.');
+                return;
+            }
+
+            const totalScore = (timelines + attitude + thinking + communication + quality) / 5;
+            const assessment = {
+                week,
+                date,
+                teamMember,
+                timelines,
+                attitude,
+                thinking,
+                communication,
+                quality,
+                totalScore,
+                performance: getPerformanceRating(totalScore),
+                comments
+            };
+
+            try {
+                // Send assessment to SheetDB
+                const response = await fetch(SHEETDB_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify([assessment]) // SheetDB expects an array
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add assessment');
+                }
+
+                // Reload assessments and update UI
+                await loadAssessments();
+                clearForm();
+                alert('Assessment added successfully!');
+            } catch (error) {
+                console.error('Error adding assessment:', error);
+                alert('Failed to add assessment. Please try again.');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('week').value = '';
+            document.getElementById('date').value = '';
+            document.getElementById('timelines').value = '';
+            document.getElementById('attitude').value = '';
+            document.getElementById('thinking').value = '';
+            document.getElementById('communication').value = '';
+            document.getElementById('quality').value = '';
+            document.getElementById('comments').value = '';
+        }
+
+        async function loadAssessments() {
+            try {
+                // Fetch assessments from SheetDB
+                const response = await fetch(SHEETDB_API_URL);
+                if (!response.ok) {
+                    throw new Error('Failed to load assessments');
+                }
+                const assessments = await response.json();
+
+                // Ensure numeric fields are parsed correctly
+                assessments.forEach(assessment => {
+                    assessment.timelines = parseFloat(assessment.timelines);
+                    assessment.attitude = parseFloat(assessment.attitude);
+                    assessment.thinking = parseFloat(assessment.thinking);
+                    assessment.communication = parseFloat(assessment.communication);
+                    assessment.quality = parseFloat(assessment.quality);
+                    assessment.totalScore = parseFloat(assessment.totalScore);
+                });
+
+                // Update UI
+                updateTable(assessments);
+                updateBestEmployeeDropdowns(assessments);
+                updateCharts(assessments);
+            } catch (error) {
+                console.error('Error loading assessments:', error);
+                alert('Failed to load assessments. Please refresh the page.');
+            }
+        }
+
+        function updateTable(assessments) {
+            const tableBody = document.getElementById('assessmentTable');
+            tableBody.innerHTML = '';
+            assessments.forEach(assessment => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-indigo-50 transition';
+                row.innerHTML = `
+                    <td class="border p-3">${assessment.week}</td>
+                    <td class="border p-3">${assessment.date}</td>
+                    <td class="border p-3">${assessment.teamMember}</td>
+                    <td class="border p-3">${assessment.timelines.toFixed(1)}</td>
+                    <td class="border p-3">${assessment.attitude.toFixed(1)}</td>
+                    <td class="border p-3">${assessment.thinking.toFixed(1)}</td>
+                    <td class="border p-3">${assessment.communication.toFixed(1)}</td>
+                    <td class="border p-3">${assessment.quality.toFixed(1)}</td>
+                    <td class="border p-3">${assessment.totalScore.toFixed(1)}</td>
+                    <td class="border p-3">${assessment.performance}</td>
+                    <td class="border p-3">${assessment.comments}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateBestEmployeeDropdowns(assessments) {
+            const weekMenu = document.getElementById('bestEmployeeWeekMenu');
+            const dateMenu = document.getElementById('bestEmployeeDateMenu');
+            const weeks = [...new Set(assessments.map(a => a.week))].sort();
+            const dates = [...new Set(assessments.map(a => a.date))].sort();
+
+            weekMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'bestEmployeeWeek\', \'\')">Select Week</div>';
+            weeks.forEach(week => {
+                const div = document.createElement('div');
+                div.className = 'custom-dropdown-item';
+                div.textContent = week;
+                div.onclick = () => selectDropdownOption('bestEmployeeWeek', week);
+                weekMenu.appendChild(div);
+            });
+
+            dateMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'bestEmployeeDate\', \'\')">Select Date</div>';
+            dates.forEach(date => {
+                const div = document.createElement('div');
+                div.className = 'custom-dropdown-item';
+                div.textContent = date;
+                div.onclick = () => selectDropdownOption('bestEmployeeDate', date);
+                dateMenu.appendChild(div);
+            });
+        }
+
+        function showBestEmployee() {
+            const selectedWeek = document.getElementById('bestEmployeeWeekButton').getAttribute('data-value');
+            const selectedDate = document.getElementById('bestEmployeeDateButton').getAttribute('data-value');
+            const bestEmployeeDiv = document.getElementById('bestEmployee');
+
+            // Fetch assessments again to ensure fresh data
+            fetch(SHEETDB_API_URL)
+                .then(response => response.json())
+                .then(assessments => {
+                    let filteredAssessments = assessments;
+
+                    if (selectedWeek) {
+                        filteredAssessments = filteredAssessments.filter(a => a.week === selectedWeek);
+                    }
+                    if (selectedDate) {
+                        filteredAssessments = filteredAssessments.filter(a => a.date === selectedDate);
+                    }
+
+                    if (filteredAssessments.length === 0) {
+                        bestEmployeeDiv.textContent = 'No assessments for the selected filters.';
+                        updateRadarChart([]);
+                        return;
+                    }
+
+                    const bestAssessment = filteredAssessments.reduce((prev, curr) =>
+                        parseFloat(prev.totalScore) > parseFloat(curr.totalScore) ? prev : curr
+                    );
+                    bestEmployeeDiv.textContent = `Best Employee: ${bestAssessment.teamMember} (Score: ${parseFloat(bestAssessment.totalScore).toFixed(1)})`;
+                    updateRadarChart([bestAssessment]);
+                })
+                .catch(error => {
+                    console.error('Error fetching assessments for best employee:', error);
+                    bestEmployeeDiv.textContent = 'Error loading best employee data.';
+                });
+        }
+
+        function exportReport() {
+            fetch(SHEETDB_API_URL)
+                .then(response => response.json())
+                .then(assessments => {
+                    if (assessments.length === 0) {
+                        alert('No data available to export.');
+                        return;
+                    }
+
+                    const headers = [
+                        'Week',
+                        'Date',
+                        'Team Member',
+                        'Project Timelines',
+                        'Attitude',
+                        'Creative/Logical Thinking',
+                        'Communication',
+                        'Quality of Work',
+                        'Total Score',
+                        'Performance',
+                        'Comments'
+                    ];
+
+                    const rows = assessments.map(assessment => [
+                        assessment.week,
+                        assessment.date,
+                        assessment.teamMember,
+                        assessment.timelines.toFixed(1),
+                        assessment.attitude.toFixed(1),
+                        assessment.thinking.toFixed(1),
+                        assessment.communication.toFixed(1),
+                        assessment.quality.toFixed(1),
+                        assessment.totalScore.toFixed(1),
+                        assessment.performance,
+                        `"${assessment.comments.replace(/"/g, '""')}"`
+                    ]);
+
+                    const csvContent = [
+                        headers.join(','),
+                        ...rows.map(row => row.join(','))
+                    ].join('\n');
+
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'qa_team_assessment_report.csv');
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                })
+                .catch(error => {
+                    console.error('Error exporting report:', error);
+                    alert('Failed to export report.');
+                });
+        }
+
+        function updateCharts(assessments) {
+            updateLineChart(assessments);
+            updateBarChart(assessments);
+        }
+
+        function updateLineChart(assessments) {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            const weeks = [...new Set(assessments.map(a => a.week))].sort();
+            const teamMembers = [...new Set(assessments.map(a => a.teamMember))];
+            const colors = [
+                { border: 'rgba(234, 179, 8, 1)', background: 'rgba(234, 179, 8, 0.2)' },
+                { border: 'rgba(147, 51, 234, 1)', background: 'rgba(147, 51, 234, 0.2)' }
+            ];
+            const datasets = teamMembers.map((member, index) => ({
+                label: member,
+                data: weeks.map(week => {
+                    const assessment = assessments.find(a => a.week === week && a.teamMember === member);
+                    return assessment ? parseFloat(assessment.totalScore) : 0;
+                }),
+                borderColor: colors[index % colors.length].border,
+                backgroundColor: colors[index % colors.length].background,
+                fill: true,
+                tension: 0.4
+            }));
+
+            if (lineChartInstance) {
+                lineChartInstance.destroy();
+            }
+
+            lineChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 5, title: { display: true, text: 'Average Score' } },
+                        x: { title: { display: true, text: 'Week' } }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Weekly Performance Trend', font: { size: 18 } }
+                    }
+                }
+            });
+        }
+
+        function updateBarChart(assessments) {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            const weeks = [...new Set(assessments.map(a => a.week))].sort().slice(-5);
+            const teamMembers = [...new Set(assessments.map(a => a.teamMember))];
+            const colors = [
+                { border: 'rgba(147, 51, 234, 1)', background: 'rgba(147, 51, 234, 0.6)' },
+                { border: 'rgba(234, 179, 8, 1)', background: 'rgba(234, 179, 8, 0.6)' }
+            ];
+            const datasets = teamMembers.map((member, index) => ({
+                label: member,
+                data: weeks.map(week => {
+                    const assessment = assessments.find(a => a.week === week && a.teamMember === member);
+                    return assessment ? parseFloat(assessment.totalScore) : 0;
+                }),
+                backgroundColor: colors[index % colors.length].background,
+                borderColor: colors[index % colors.length].border,
+                borderWidth: 1
+            }));
+
+            if (barChartInstance) {
+                barChartInstance.destroy();
+            }
+
+            barChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: weeks,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 5, title: { display: true, text: 'Average Score' } },
+                        x: { title: { display: true, text: 'Week' } }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Recent Performance Comparison', font: { size: 18 } }
+                    }
+                }
+            });
+        }
+
+        function updateRadarChart(assessments) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            const data = assessments.length > 0 ? [{
+                label: assessments[0].teamMember,
+                data: [
+                    parseFloat(assessments[0].timelines),
+                    parseFloat(assessments[0].attitude),
+                    parseFloat(assessments[0].thinking),
+                    parseFloat(assessments[0].communication),
+                    parseFloat(assessments[0].quality)
+                ],
+                backgroundColor: 'rgba(219, 39, 119, 0.2)',
+                borderColor: 'rgba(219, 39, 119, 1)',
+                borderWidth: 2
+            }] : [];
+
+            if (radarChartInstance) {
+                radarChartInstance.destroy();
+            }
+
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Timelines', 'Attitude', 'Thinking', 'Communication', 'Quality'],
+                    datasets: data
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Best Employee Performance Breakdown', font: { size: 18 } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
