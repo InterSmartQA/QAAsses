@@ -146,6 +146,15 @@
             <h2 class="text-3xl font-semibold text-indigo-900 mb-6">Best Employee</h2>
             <div class="flex space-x-4 mb-4">
                 <div class="custom-dropdown w-full max-w-xs">
+                    <button class="custom-dropdown-button" id="bestEmployeeMonthButton" data-value="" onclick="toggleDropdown('bestEmployeeMonth')">
+                        Select Month
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="custom-dropdown-menu" id="bestEmployeeMonthMenu">
+                        <div class="custom-dropdown-item" onclick="selectDropdownOption('bestEmployeeMonth', '')">Select Month</div>
+                    </div>
+                </div>
+                <div class="custom-dropdown w-full max-w-xs">
                     <button class="custom-dropdown-button" id="bestEmployeeWeekButton" data-value="" onclick="toggleDropdown('bestEmployeeWeek')">
                         Select Week
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -174,7 +183,18 @@
         <div class="card p-8 mb-10" id="history">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-semibold text-indigo-900">Assessment History</h2>
-                <button onclick="exportReport()" class="bg-green-600 text-white px-6 py-3 rounded-lg btn">Export Report (CSV)</button>
+                <div class="flex space-x-4">
+                    <div class="custom-dropdown w-full max-w-xs">
+                        <button class="custom-dropdown-button" id="exportMonthButton" data-value="" onclick="toggleDropdown('exportMonth')">
+                            Select Month
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="custom-dropdown-menu" id="exportMonthMenu">
+                            <div class="custom-dropdown-item" onclick="selectDropdownOption('exportMonth', '')">All Months</div>
+                        </div>
+                    </div>
+                    <button onclick="exportReport()" class="bg-green-600 text-white px-6 py-3 rounded-lg btn">Export Report (CSV)</button>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse">
@@ -201,6 +221,17 @@
         <!-- Performance Analytics -->
         <div class="card p-8" id="analytics">
             <h2 class="text-3xl font-semibold text-indigo-900 mb-6">Performance Trends</h2>
+            <div class="flex space-x-4 mb-6">
+                <div class="custom-dropdown w-full max-w-xs">
+                    <button class="custom-dropdown-button" id="analyticsMonthButton" data-value="" onclick="toggleDropdown('analyticsMonth')">
+                        Select Month
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="custom-dropdown-menu" id="analyticsMonthMenu">
+                        <div class="custom-dropdown-item" onclick="selectDropdownOption('analyticsMonth', '')">All Months</div>
+                    </div>
+                </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="chart-container">
                     <canvas id="lineChart"></canvas>
@@ -214,7 +245,7 @@
 
     <script>
         // Replace with your SheetDB API URL
-        const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/95u4gr0g7m5i2'; // Replace YOUR_API_ID with your SheetDB API ID
+        const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/95u4gr0g7m5i2'; // Replace with your SheetDB API ID
 
         let lineChartInstance = null;
         let barChartInstance = null;
@@ -254,10 +285,12 @@
         function selectDropdownOption(id, value) {
             const button = document.getElementById(`${id}Button`);
             button.setAttribute('data-value', value);
-            button.firstChild.textContent = value || `Select ${id.replace('bestEmployee', '')}`;
+            button.firstChild.textContent = value || `Select ${id.replace(/bestEmployee|analytics|export/, '').replace('Month', 'Month').replace('Week', 'Week').replace('Date', 'Date')}`;
             closeAllDropdowns();
-            if (id === 'bestEmployeeWeek' || id === 'bestEmployeeDate') {
+            if (id.includes('bestEmployee')) {
                 showBestEmployee();
+            } else if (id === 'analyticsMonth') {
+                loadAssessments();
             }
         }
 
@@ -364,7 +397,7 @@
 
                 // Update UI
                 updateTable(assessments);
-                updateBestEmployeeDropdowns(assessments);
+                updateDropdowns(assessments);
                 updateCharts(assessments);
             } catch (error) {
                 console.error('Error loading assessments:', error);
@@ -395,12 +428,29 @@
             });
         }
 
-        function updateBestEmployeeDropdowns(assessments) {
+        function updateDropdowns(assessments) {
+            const monthMenu = document.getElementById('bestEmployeeMonthMenu');
             const weekMenu = document.getElementById('bestEmployeeWeekMenu');
             const dateMenu = document.getElementById('bestEmployeeDateMenu');
+            const exportMonthMenu = document.getElementById('exportMonthMenu');
+            const analyticsMonthMenu = document.getElementById('analyticsMonthMenu');
+
+            // Extract unique months
+            const months = [...new Set(assessments.map(a => a.date.slice(0, 7)))].sort();
             const weeks = [...new Set(assessments.map(a => a.week))].sort();
             const dates = [...new Set(assessments.map(a => a.date))].sort();
 
+            // Update Best Employee Month Dropdown
+            monthMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'bestEmployeeMonth\', \'\')">Select Month</div>';
+            months.forEach(month => {
+                const div = document.createElement('div');
+                div.className = 'custom-dropdown-item';
+                div.textContent = month;
+                div.onclick = () => selectDropdownOption('bestEmployeeMonth', month);
+                monthMenu.appendChild(div);
+            });
+
+            // Update Best Employee Week Dropdown
             weekMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'bestEmployeeWeek\', \'\')">Select Week</div>';
             weeks.forEach(week => {
                 const div = document.createElement('div');
@@ -410,6 +460,7 @@
                 weekMenu.appendChild(div);
             });
 
+            // Update Best Employee Date Dropdown
             dateMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'bestEmployeeDate\', \'\')">Select Date</div>';
             dates.forEach(date => {
                 const div = document.createElement('div');
@@ -418,9 +469,30 @@
                 div.onclick = () => selectDropdownOption('bestEmployeeDate', date);
                 dateMenu.appendChild(div);
             });
+
+            // Update Export Month Dropdown
+            exportMonthMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'exportMonth\', \'\')">All Months</div>';
+            months.forEach(month => {
+                const div = document.createElement('div');
+                div.className = 'custom-dropdown-item';
+                div.textContent = month;
+                div.onclick = () => selectDropdownOption('exportMonth', month);
+                exportMonthMenu.appendChild(div);
+            });
+
+            // Update Analytics Month Dropdown
+            analyticsMonthMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'analyticsMonth\', \'\')">All Months</div>';
+            months.forEach(month => {
+                const div = document.createElement('div');
+                div.className = 'custom-dropdown-item';
+                div.textContent = month;
+                div.onclick = () => selectDropdownOption('analyticsMonth', month);
+                analyticsMonthMenu.appendChild(div);
+            });
         }
 
         function showBestEmployee() {
+            const selectedMonth = document.getElementById('bestEmployeeMonthButton').getAttribute('data-value');
             const selectedWeek = document.getElementById('bestEmployeeWeekButton').getAttribute('data-value');
             const selectedDate = document.getElementById('bestEmployeeDateButton').getAttribute('data-value');
             const bestEmployeeDiv = document.getElementById('bestEmployee');
@@ -431,6 +503,9 @@
                 .then(assessments => {
                     let filteredAssessments = assessments;
 
+                    if (selectedMonth) {
+                        filteredAssessments = filteredAssessments.filter(a => a.date.startsWith(selectedMonth));
+                    }
                     if (selectedWeek) {
                         filteredAssessments = filteredAssessments.filter(a => a.week === selectedWeek);
                     }
@@ -457,11 +532,22 @@
         }
 
         function exportReport() {
+            const selectedMonth = document.getElementById('exportMonthButton').getAttribute('data-value');
             fetch(SHEETDB_API_URL)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch assessments');
+                    }
+                    return response.json();
+                })
                 .then(assessments => {
-                    if (assessments.length === 0) {
-                        alert('No data available to export.');
+                    let filteredAssessments = assessments;
+                    if (selectedMonth) {
+                        filteredAssessments = assessments.filter(a => a.date.startsWith(selectedMonth));
+                    }
+
+                    if (filteredAssessments.length === 0) {
+                        alert('No data available to export for the selected month.');
                         return;
                     }
 
@@ -473,13 +559,13 @@
                         'Attitude',
                         'Creative/Logical Thinking',
                         'Communication',
-                        'knowledge of Work',
+                        'Knowledge',
                         'Total Score',
                         'Performance',
                         'Comments'
                     ];
 
-                    const rows = assessments.map(assessment => [
+                    const rows = filteredAssessments.map(assessment => [
                         assessment.week,
                         assessment.date,
                         assessment.teamMember,
@@ -501,8 +587,9 @@
                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                     const link = document.createElement('a');
                     const url = URL.createObjectURL(blob);
+                    const filename = selectedMonth ? `qa_team_assessment_${selectedMonth}.csv` : 'qa_team_assessment_report.csv';
                     link.setAttribute('href', url);
-                    link.setAttribute('download', 'qa_team_assessment_report.csv');
+                    link.setAttribute('download', filename);
                     link.style.visibility = 'hidden';
                     document.body.appendChild(link);
                     link.click();
@@ -510,13 +597,18 @@
                 })
                 .catch(error => {
                     console.error('Error exporting report:', error);
-                    alert('Failed to export report.');
+                    alert('Failed to export report. Please try again.');
                 });
         }
 
         function updateCharts(assessments) {
-            updateLineChart(assessments);
-            updateBarChart(assessments);
+            const selectedMonth = document.getElementById('analyticsMonthButton').getAttribute('data-value');
+            let filteredAssessments = assessments;
+            if (selectedMonth) {
+                filteredAssessments = assessments.filter(a => a.date.startsWith(selectedMonth));
+            }
+            updateLineChart(filteredAssessments);
+            updateBarChart(filteredAssessments);
         }
 
         function updateLineChart(assessments) {
