@@ -135,7 +135,7 @@
                 <input id="attitude" type="number" step="0.1" min="0" max="5" placeholder="Attitude (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
                 <input id="thinking" type="number" step="0.1" min="0" max="5" placeholder="Creative/Logical Thinking (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
                 <input id="communication" type="number" step="0.1" min="0" max="5" placeholder="Communication (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
-                <input id="quality" type="number" step="0.1" min="0" max="5" placeholder="Quality of Work (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <input id="knowledge" type="number" step="0.1" min="0" max="5" placeholder="Quiz Score(0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
                 <textarea id="comments" placeholder="Comments/Feedback" class="border p-3 rounded-lg w-full col-span-2 bg-gray-50 h-32 focus:ring-2 focus:ring-indigo-500 transition"></textarea>
             </div>
             <button onclick="addAssessment()" class="mt-6 bg-indigo-900 text-white px-8 py-3 rounded-lg btn">Submit Assessment</button>
@@ -187,7 +187,7 @@
                             <th class="border p-3 text-left">Attitude</th>
                             <th class="border p-3 text-left">Thinking</th>
                             <th class="border p-3 text-left">Communication</th>
-                            <th class="border p-3 text-left">Quality</th>
+                            <th class="border p-3 text-left">Knowledge</th>
                             <th class="border p-3 text-left">Total Score</th>
                             <th class="border p-3 text-left">Performance</th>
                             <th class="border p-3 text-left">Comments</th>
@@ -276,7 +276,7 @@
             const attitude = parseFloat(document.getElementById('attitude').value);
             const thinking = parseFloat(document.getElementById('thinking').value);
             const communication = parseFloat(document.getElementById('communication').value);
-            const quality = parseFloat(document.getElementById('quality').value);
+            const knowledge = parseFloat(document.getElementById('knowledge').value);
             const comments = document.getElementById('comments').value;
 
             // Validate inputs
@@ -284,16 +284,16 @@
                 alert('Please fill all required fields (Week, Date, Team Member).');
                 return;
             }
-            if (isNaN(timelines) || isNaN(attitude) || isNaN(thinking) || isNaN(communication) || isNaN(quality)) {
+            if (isNaN(timelines) || isNaN(attitude) || isNaN(thinking) || isNaN(communication) || isNaN(knowledge)) {
                 alert('Please provide valid scores for all metrics.');
                 return;
             }
-            if ([timelines, attitude, thinking, communication, quality].some(score => score < 0 || score > 5)) {
+            if ([timelines, attitude, thinking, communication, knowledge].some(score => score < 0 || score > 5)) {
                 alert('Scores must be between 0 and 5.');
                 return;
             }
 
-            const totalScore = (timelines + attitude + thinking + communication + quality) / 5;
+            const totalScore = (timelines + attitude + thinking + communication + knowledge) / 5;
             const assessment = {
                 week,
                 date,
@@ -302,7 +302,7 @@
                 attitude,
                 thinking,
                 communication,
-                quality,
+                knowledge,
                 totalScore,
                 performance: getPerformanceRating(totalScore),
                 comments
@@ -339,7 +339,7 @@
             document.getElementById('attitude').value = '';
             document.getElementById('thinking').value = '';
             document.getElementById('communication').value = '';
-            document.getElementById('quality').value = '';
+            document.getElementById('knowledge').value = '';
             document.getElementById('comments').value = '';
         }
 
@@ -358,7 +358,7 @@
                     assessment.attitude = parseFloat(assessment.attitude);
                     assessment.thinking = parseFloat(assessment.thinking);
                     assessment.communication = parseFloat(assessment.communication);
-                    assessment.quality = parseFloat(assessment.quality);
+                    assessment.knowledge = parseFloat(assessment.knowledge);
                     assessment.totalScore = parseFloat(assessment.totalScore);
                 });
 
@@ -386,7 +386,7 @@
                     <td class="border p-3">${assessment.attitude.toFixed(1)}</td>
                     <td class="border p-3">${assessment.thinking.toFixed(1)}</td>
                     <td class="border p-3">${assessment.communication.toFixed(1)}</td>
-                    <td class="border p-3">${assessment.quality.toFixed(1)}</td>
+                    <td class="border p-3">${assessment.knowledge.toFixed(1)}</td>
                     <td class="border p-3">${assessment.totalScore.toFixed(1)}</td>
                     <td class="border p-3">${assessment.performance}</td>
                     <td class="border p-3">${assessment.comments}</td>
@@ -473,7 +473,7 @@
                         'Attitude',
                         'Creative/Logical Thinking',
                         'Communication',
-                        'Quality of Work',
+                        'knowledge of Work',
                         'Total Score',
                         'Performance',
                         'Comments'
@@ -487,7 +487,7 @@
                         assessment.attitude.toFixed(1),
                         assessment.thinking.toFixed(1),
                         assessment.communication.toFixed(1),
-                        assessment.quality.toFixed(1),
+                        assessment.knowledge.toFixed(1),
                         assessment.totalScore.toFixed(1),
                         assessment.performance,
                         `"${assessment.comments.replace(/"/g, '""')}"`
@@ -617,7 +617,7 @@
                     parseFloat(assessments[0].attitude),
                     parseFloat(assessments[0].thinking),
                     parseFloat(assessments[0].communication),
-                    parseFloat(assessments[0].quality)
+                    parseFloat(assessments[0].knowledge)
                 ],
                 backgroundColor: 'rgba(219, 39, 119, 0.2)',
                 borderColor: 'rgba(219, 39, 119, 1)',
@@ -631,7 +631,7 @@
             radarChartInstance = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Timelines', 'Attitude', 'Thinking', 'Communication', 'Quality'],
+                    labels: ['Timelines', 'Attitude', 'Thinking', 'Communication', 'Knowledge'],
                     datasets: data
                 },
                 options: {
