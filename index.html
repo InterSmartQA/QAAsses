@@ -6,54 +6,136 @@
     <title>QA Team Assessment Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #1a4971;
+            --secondary: #2a9d8f;
+            --accent: #e76f51;
+            --background: #f8fafc;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --hover: #edf2f7;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            margin: 0;
+            overflow-x: hidden;
         }
+
         .sidebar {
-            transition: transform 0.3s ease-in-out;
+            transition: width 0.3s ease-in-out;
             background: linear-gradient(to bottom, #1e40af, #2563eb);
+            width: 64px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 50;
+            overflow: hidden;
         }
-        .sidebar-hidden {
-            transform: translateX(-100%);
+
+        .sidebar-expanded {
+            width: 256px;
         }
+
+        .sidebar-content {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+        }
+
+        .sidebar-expanded .sidebar-content {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .main-content {
+            transition: margin-left 0.3s ease-in-out;
+            margin-left: 64px;
+        }
+
+        .main-content-expanded {
+            margin-left: 256px;
+        }
+
         .card {
             background: white;
             border-radius: 1.5rem;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         }
+
         .btn {
             transition: all 0.3s ease;
         }
+
         .btn:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
+
         .nav-link {
-            transition: background 0.3s ease, padding-left 0.3s ease;
+            display: flex;
+            align-items: center;
+            transition: background 0.3s ease;
+            width: 100%;
+            padding: 0;
         }
+
         .nav-link:hover {
             background: rgba(255, 255, 255, 0.1);
-            padding-left: 1.5rem;
         }
+
+        .nav-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .nav-text {
+            display: none;
+            color: white;
+            font-size: 18px;
+            margin-left: 16px;
+        }
+
+        .sidebar-expanded .nav-text {
+            display: inline;
+        }
+
+        .sidebar-expanded .nav-link {
+            padding: 0 0 0 16px;
+        }
+
         .chart-container {
             position: relative;
             height: 300px;
             width: 100%;
         }
+
         h1, h2 {
             font-family: 'Playfair Display', serif;
         }
+
         .custom-dropdown {
             position: relative;
         }
+
         .custom-dropdown-button {
             background-color: #f9fafb;
             border: 1px solid #d1d5db;
@@ -66,9 +148,11 @@
             align-items: center;
             transition: all 0.2s ease;
         }
+
         .custom-dropdown-button:hover {
             border-color: #4f46e5;
         }
+
         .custom-dropdown-menu {
             position: absolute;
             top: 100%;
@@ -77,40 +161,292 @@
             background: white;
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 10;
+            z-index: 100;
             max-height: 200px;
             overflow-y: auto;
             display: none;
         }
+
         .custom-dropdown-menu.show {
             display: block;
         }
+
         .custom-dropdown-item {
             padding: 0.5rem 1rem;
             cursor: pointer;
             transition: background 0.2s ease;
         }
+
         .custom-dropdown-item:hover {
             background-color: #f3f4f6;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 600px;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            min-width: 1200px;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 14px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+        }
+
+        td {
+            background-color: white;
+        }
+
+        th:nth-child(11), td:nth-child(11) {
+            background-color: #fefcbf;
+            color: #dc2626;
+            white-space: normal;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f9fafb;
+        }
+
+        tr:hover td {
+            background-color: var(--hover);
+        }
+
+        tr.active td {
+            background-color: rgba(42, 157, 143, 0.1);
+        }
+
+        tr:hover td:nth-child(11) {
+            background-color: #fefcbf;
+            color: #dc2626;
+        }
+
+        .edit-btn, .save-btn, .cancel-btn, .submit-btn {
+            color: white;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-right: 8px;
+            font-size: 14px;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .edit-btn {
+            background-color: #3b82f6;
+        }
+
+        .edit-btn:hover {
+            background-color: #2563eb;
+        }
+
+        .save-btn {
+            background-color: #10b981;
+        }
+
+        .save-btn:hover {
+            background-color: #059669;
+        }
+
+        .cancel-btn {
+            background-color: #6b7280;
+        }
+
+        .cancel-btn:hover {
+            background-color: #4b5563;
+        }
+
+        .submit-btn {
+            background-color: #1e40af;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            white-space: nowrap;
+            min-width: 200px;
+        }
+
+        .submit-btn:hover {
+            background-color: #1e3a8a;
+        }
+
+        .edit-btn::after, .save-btn::after, .cancel-btn::after, .submit-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .edit-btn:hover::after, .save-btn:hover::after, .cancel-btn:hover::after, .submit-btn:hover::after {
+            opacity: 1;
+        }
+
+        .submit-btn .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        .submit-btn.loading .loader {
+            display: inline-block;
+        }
+
+        .submit-btn.loading .btn-text {
+            display: none;
+        }
+
+        .submit-btn.loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 10px 18px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--hover);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .pagination button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .pagination button:disabled {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .pagination button[data-active="true"] {
+            background-color: var(--secondary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .pagination button[data-active="true"]:hover {
+            background-color: #21867a;
+        }
+
+        .edit-input, .flatpickr-input {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                padding: 20px;
+            }
+            .main-content {
+                margin-left: 64px;
+            }
+            .main-content-expanded {
+                margin-left: 64px;
+            }
+            .submit-btn {
+                min-width: 150px;
+                padding: 10px 16px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body class="min-h-screen">
     <!-- Sidebar -->
-    <div class="fixed inset-y-0 left-0 w-64 text-white sidebar z-50">
-        <div class="p-6">
+    <div class="fixed inset-y-0 left-0 text-white sidebar sidebar-expanded z-50">
+        <div class="sidebar-content p-6">
             <h2 class="text-3xl font-bold text-center">QA Royal Dashboard</h2>
         </div>
         <nav class="mt-6">
-            <a href="#dashboard" class="block px-6 py-3 text-lg nav-link">Dashboard</a>
-            <a href="#input" class="block px-6 py-3 text-lg nav-link">Add Assessment</a>
-            <a href="#history" class="block px-6 py-3 text-lg nav-link">History</a>
-            <a href="#analytics" class="block px-6 py-3 text-lg nav-link">Analytics</a>
+            <a href="#dashboard" class="nav-link">
+                <span class="nav-icon"><i class="fas fa-tachometer-alt"></i></span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+            <a href="#input" class="nav-link">
+                <span class="nav-icon"><i class="fas fa-plus-circle"></i></span>
+                <span class="nav-text">Add Assessment</span>
+            </a>
+            <a href="#history" class="nav-link">
+                <span class="nav-icon"><i class="fas fa-history"></i></span>
+                <span class="nav-text">History</span>
+            </a>
+            <a href="#analytics" class="nav-link">
+                <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+                <span class="nav-text">Analytics</span>
+            </a>
         </nav>
     </div>
 
     <!-- Main Content -->
-    <div class="ml-64 p-8">
+    <div class="main-content main-content-expanded p-8">
         <button onclick="toggleSidebar()" class="mb-6 p-3 bg-indigo-900 text-white rounded-full btn">☰ Menu</button>
         
         <h1 class="text-5xl font-bold text-white mb-10 text-center" id="dashboard">QA Team Assessment Dashboard</h1>
@@ -129,8 +465,8 @@
                         <div class="custom-dropdown-item" onclick="selectDropdownOption('teamMember', 'Minnu Sebastian')">Minnu Sebastian</div>
                     </div>
                 </div>
-                <input id="week" type="week" placeholder="Select Week" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
-                <input id="date" type="date" placeholder="Select Date" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
+                <input id="week" type="text" placeholder="Select Week" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition flatpickr-input" readonly>
+                <input id="date" type="text" placeholder="Select Date" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition flatpickr-input" readonly>
                 <input id="timelines" type="number" step="0.1" min="0" max="5" placeholder="Project Timelines (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
                 <input id="attitude" type="number" step="0.1" min="0" max="5" placeholder="Attitude (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
                 <input id="thinking" type="number" step="0.1" min="0" max="5" placeholder="Creative/Logical Thinking (0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
@@ -138,7 +474,10 @@
                 <input id="knowledge" type="number" step="0.1" min="0" max="5" placeholder="Quiz Score(0-5)" class="border p-3 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition">
                 <textarea id="comments" placeholder="Comments/Feedback" class="border p-3 rounded-lg w-full col-span-2 bg-gray-50 h-32 focus:ring-2 focus:ring-indigo-500 transition"></textarea>
             </div>
-            <button onclick="addAssessment()" class="mt-6 bg-indigo-900 text-white px-8 py-3 rounded-lg btn">Submit Assessment</button>
+            <button onclick="addAssessment()" class="mt-6 text-white btn submit-btn" data-tooltip="Submit Assessment">
+                <span class="loader"></span>
+                <span class="btn-text">Submit Assessment</span>
+            </button>
         </div>
 
         <!-- Best Employee -->
@@ -193,29 +532,31 @@
                             <div class="custom-dropdown-item" onclick="selectDropdownOption('exportMonth', '')">All Months</div>
                         </div>
                     </div>
-                    <button onclick="exportReport()" class="bg-green-600 text-white px-6 py-3 rounded-lg btn">Export Report (CSV)</button>
+                    <button onclick="exportReport()" class="bg-green-600 text-white px-4 py-2 rounded-lg btn">Export</button>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full border-collapse">
+            <div class="table-container">
+                <table class="w-full border-collapse" id="assessmentTable">
                     <thead>
-                        <tr class="bg-indigo-100">
-                            <th class="border p-3 text-left">Week</th>
-                            <th class="border p-3 text-left">Date</th>
-                            <th class="border p-3 text-left">Team Member</th>
-                            <th class="border p-3 text-left">Timelines</th>
-                            <th class="border p-3 text-left">Attitude</th>
-                            <th class="border p-3 text-left">Thinking</th>
-                            <th class="border p-3 text-left">Communication</th>
-                            <th class="border p-3 text-left">Knowledge</th>
-                            <th class="border p-3 text-left">Total Score</th>
-                            <th class="border p-3 text-left">Performance</th>
-                            <th class="border p-3 text-left">Comments</th>
+                        <tr>
+                            <th>Week</th>
+                            <th>Date</th>
+                            <th>Team Member</th>
+                            <th>Timelines</th>
+                            <th>Attitude</th>
+                            <th>Thinking</th>
+                            <th>Communication</th>
+                            <th>Knowledge</th>
+                            <th>Total Score</th>
+                            <th>Performance</th>
+                            <th>Comments</th>
+                            <th style="width: 60px;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="assessmentTable"></tbody>
+                    <tbody id="assessmentTableBody"></tbody>
                 </table>
             </div>
+            <div class="pagination" id="pagination"></div>
         </div>
 
         <!-- Performance Analytics -->
@@ -244,17 +585,36 @@
     </div>
 
     <script>
-        // Replace with your SheetDB API URL
         const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/95u4gr0g7m5i2'; // Replace with your SheetDB API ID
-
         let lineChartInstance = null;
         let barChartInstance = null;
         let radarChartInstance = null;
+        let assessments = [];
+        const rowsPerPage = 15;
+        let currentPage = 1;
+        let datepickers = [];
 
-        // Initialize the page by loading assessments
+        // Initialize Flatpickr for form inputs
         document.addEventListener('DOMContentLoaded', () => {
+            flatpickr('#week', {
+                dateFormat: 'Y-\\WW',
+                weekNumbers: true,
+                allowInput: false
+            });
+            flatpickr('#date', {
+                dateFormat: 'Y-m-d',
+                allowInput: false
+            });
             loadAssessments();
         });
+
+        // UUID generator
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
 
         function getPerformanceRating(score) {
             if (score <= 2.5) return 'Needs Improvement';
@@ -264,7 +624,10 @@
         }
 
         function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('sidebar-hidden');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            sidebar.classList.toggle('sidebar-expanded');
+            mainContent.classList.toggle('main-content-expanded');
         }
 
         function toggleDropdown(id) {
@@ -290,11 +653,12 @@
             if (id.includes('bestEmployee')) {
                 showBestEmployee();
             } else if (id === 'analyticsMonth') {
-                loadAssessments();
+                updateCharts(assessments);
+            } else if (id === 'exportMonth') {
+                updateTable(assessments);
             }
         }
 
-        // Close dropdowns when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.custom-dropdown')) {
                 closeAllDropdowns();
@@ -302,6 +666,10 @@
         });
 
         async function addAssessment() {
+            const button = document.querySelector('#input .submit-btn');
+            button.classList.add('loading');
+            button.disabled = true;
+
             const week = document.getElementById('week').value;
             const date = document.getElementById('date').value;
             const teamMember = document.getElementById('teamMemberButton').getAttribute('data-value');
@@ -312,22 +680,24 @@
             const knowledge = parseFloat(document.getElementById('knowledge').value);
             const comments = document.getElementById('comments').value;
 
-            // Validate inputs
             if (!week || !date || !teamMember) {
-                alert('Please fill all required fields (Week, Date, Team Member).');
-                return;
-            }
-            if (isNaN(timelines) || isNaN(attitude) || isNaN(thinking) || isNaN(communication) || isNaN(knowledge)) {
-                alert('Please provide valid scores for all metrics.');
-                return;
-            }
-            if ([timelines, attitude, thinking, communication, knowledge].some(score => score < 0 || score > 5)) {
-                alert('Scores must be between 0 and 5.');
+                alert('Week, Date, and Team Member are required.');
+                button.classList.remove('loading');
+                button.disabled = false;
                 return;
             }
 
-            const totalScore = (timelines + attitude + thinking + communication + knowledge) / 5;
+            const numericFields = [timelines, attitude, thinking, communication, knowledge];
+            if (numericFields.some(isNaN) || numericFields.some(score => score < 0 || score > 5)) {
+                alert('Scores must be numbers between 0 and 5.');
+                button.classList.remove('loading');
+                button.disabled = false;
+                return;
+            }
+
+            const totalScore = numericFields.reduce((sum, score) => sum + score, 0) / 5;
             const assessment = {
+                rowId: generateUUID(),
                 week,
                 date,
                 teamMember,
@@ -342,32 +712,39 @@
             };
 
             try {
-                // Send assessment to SheetDB
                 const response = await fetch(SHEETDB_API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify([assessment]) // SheetDB expects an array
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify([assessment])
                 });
-
                 if (!response.ok) {
-                    throw new Error('Failed to add assessment');
+                    let errorMessage = response.statusText;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        console.warn('Failed to parse error response:', e);
+                    }
+                    throw new Error(`Failed to save assessment: ${errorMessage}`);
                 }
-
-                // Reload assessments and update UI
                 await loadAssessments();
                 clearForm();
-                alert('Assessment added successfully!');
+                button.classList.remove('loading');
+                button.disabled = false;
+                alert('Assessment saved successfully!');
             } catch (error) {
-                console.error('Error adding assessment:', error);
-                alert('Failed to add assessment. Please try again.');
+                console.error('Error saving assessment:', error);
+                alert(`Failed to save assessment: ${error.message}. Please verify the SheetDB API configuration.`);
+                button.classList.remove('loading');
+                button.disabled = false;
             }
         }
 
         function clearForm() {
             document.getElementById('week').value = '';
             document.getElementById('date').value = '';
+            document.getElementById('teamMemberButton').setAttribute('data-value', 'Aswathi M Ashok');
+            document.getElementById('teamMemberButton').firstChild.textContent = 'Aswathi M Ashok';
             document.getElementById('timelines').value = '';
             document.getElementById('attitude').value = '';
             document.getElementById('thinking').value = '';
@@ -378,54 +755,263 @@
 
         async function loadAssessments() {
             try {
-                // Fetch assessments from SheetDB
                 const response = await fetch(SHEETDB_API_URL);
-                if (!response.ok) {
-                    throw new Error('Failed to load assessments');
-                }
-                const assessments = await response.json();
-
-                // Ensure numeric fields are parsed correctly
+                if (!response.ok) throw new Error(`Failed to load assessments: ${response.statusText}`);
+                assessments = await response.json();
                 assessments.forEach(assessment => {
-                    assessment.timelines = parseFloat(assessment.timelines);
-                    assessment.attitude = parseFloat(assessment.attitude);
-                    assessment.thinking = parseFloat(assessment.thinking);
-                    assessment.communication = parseFloat(assessment.communication);
-                    assessment.knowledge = parseFloat(assessment.knowledge);
-                    assessment.totalScore = parseFloat(assessment.totalScore);
+                    assessment.rowId = assessment.rowId || generateUUID();
+                    assessment.timelines = parseFloat(assessment.timelines) || 0;
+                    assessment.attitude = parseFloat(assessment.attitude) || 0;
+                    assessment.thinking = parseFloat(assessment.thinking) || 0;
+                    assessment.communication = parseFloat(assessment.communication) || 0;
+                    assessment.knowledge = parseFloat(assessment.knowledge) || 0;
+                    assessment.totalScore = parseFloat(assessment.totalScore) || 0;
                 });
-
-                // Update UI
                 updateTable(assessments);
                 updateDropdowns(assessments);
                 updateCharts(assessments);
             } catch (error) {
                 console.error('Error loading assessments:', error);
-                alert('Failed to load assessments. Please refresh the page.');
+                alert('Failed to load assessments. Please check the SheetDB API configuration and refresh the page.');
             }
         }
 
         function updateTable(assessments) {
-            const tableBody = document.getElementById('assessmentTable');
+            const filteredAssessments = filterAssessments(assessments);
+            renderTableRows(filteredAssessments);
+        }
+
+        function filterAssessments(assessments) {
+            const selectedMonth = document.getElementById('exportMonthButton').getAttribute('data-value');
+            return selectedMonth ? assessments.filter(a => a.date.startsWith(selectedMonth)) : assessments;
+        }
+
+        function renderTableRows(rows) {
+            const tableBody = document.getElementById('assessmentTableBody');
             tableBody.innerHTML = '';
-            assessments.forEach(assessment => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-indigo-50 transition';
-                row.innerHTML = `
-                    <td class="border p-3">${assessment.week}</td>
-                    <td class="border p-3">${assessment.date}</td>
-                    <td class="border p-3">${assessment.teamMember}</td>
-                    <td class="border p-3">${assessment.timelines.toFixed(1)}</td>
-                    <td class="border p-3">${assessment.attitude.toFixed(1)}</td>
-                    <td class="border p-3">${assessment.thinking.toFixed(1)}</td>
-                    <td class="border p-3">${assessment.communication.toFixed(1)}</td>
-                    <td class="border p-3">${assessment.knowledge.toFixed(1)}</td>
-                    <td class="border p-3">${assessment.totalScore.toFixed(1)}</td>
-                    <td class="border p-3">${assessment.performance}</td>
-                    <td class="border p-3">${assessment.comments}</td>
-                `;
-                tableBody.appendChild(row);
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedRows = rows.slice(start, end);
+
+            if (paginatedRows.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="12">No data available</td></tr>';
+            } else {
+                paginatedRows.forEach(assessment => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-rowid', assessment.rowId);
+                    row.className = 'hover:bg-[var(--hover)] transition';
+                    row.addEventListener('click', (event) => {
+                        if (event.target.tagName !== 'BUTTON' && !event.target.closest('button')) {
+                            document.querySelectorAll('#assessmentTable tr.active').forEach(r => r.classList.remove('active'));
+                            row.classList.add('active');
+                        }
+                    });
+                    row.innerHTML = `
+                        <td>${assessment.week || ''}</td>
+                        <td>${assessment.date || ''}</td>
+                        <td>${assessment.teamMember || ''}</td>
+                        <td>${assessment.timelines.toFixed(1)}</td>
+                        <td>${assessment.attitude.toFixed(1)}</td>
+                        <td>${assessment.thinking.toFixed(1)}</td>
+                        <td>${assessment.communication.toFixed(1)}</td>
+                        <td>${assessment.knowledge.toFixed(1)}</td>
+                        <td>${assessment.totalScore.toFixed(1)}</td>
+                        <td>${assessment.performance || ''}</td>
+                        <td>${assessment.comments || ''}</td>
+                        <td>
+                            <button class="edit-btn" onclick="editRow(this)" data-tooltip="Edit Row"><i class="fas fa-edit"></i></button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            updatePagination(rows.length);
+        }
+
+        function updatePagination(totalRows) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+            if (totalRows === 0) {
+                pagination.innerHTML = '<p>No pages available</p>';
+                return;
+            }
+
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'Previous';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateTable(assessments);
+                }
+            };
+            pagination.appendChild(prevButton);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.disabled = i === currentPage;
+                if (i === currentPage) pageButton.setAttribute('data-active', 'true');
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    updateTable(assessments);
+                };
+                pagination.appendChild(pageButton);
+            }
+
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Next';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateTable(assessments);
+                }
+            };
+            pagination.appendChild(nextButton);
+        }
+
+        function editRow(button) {
+            event.stopPropagation();
+            const row = button.closest('tr');
+            const rowId = row.getAttribute('data-rowid');
+            if (!rowId) {
+                alert('Error: Row ID is missing.');
+                return;
+            }
+            const cells = Array.from(row.children).slice(0, 11);
+
+            datepickers.forEach(dp => dp.destroy());
+            datepickers = [];
+
+            cells.forEach((cell, index) => {
+                const currentValue = cell.innerText;
+                cell.innerHTML = '';
+                const input = document.createElement('input');
+                input.className = 'edit-input';
+                input.value = currentValue;
+
+                if (index === 0 || index === 1) { // Week or Date
+                    input.className = 'flatpickr-input';
+                    input.readOnly = true;
+                    cell.appendChild(input);
+                    const fp = flatpickr(input, {
+                        dateFormat: index === 0 ? 'Y-\\WW' : 'Y-m-d',
+                        weekNumbers: index === 0,
+                        allowInput: false,
+                        defaultDate: currentValue || null,
+                        onChange: (selectedDates, dateStr) => {
+                            input.value = dateStr;
+                        }
+                    });
+                    datepickers.push(fp);
+                } else if ([3, 4, 5, 6, 7, 8].includes(index)) { // Numeric fields
+                    input.type = 'number';
+                    input.step = '0.1';
+                    input.min = '0';
+                    input.max = '5';
+                    cell.appendChild(input);
+                } else if (index === 10) { // Comments
+                    const textarea = document.createElement('textarea');
+                    textarea.className = 'edit-input';
+                    textarea.value = currentValue;
+                    cell.appendChild(textarea);
+                } else {
+                    cell.appendChild(input);
+                }
             });
+
+            const actionsCell = row.children[11];
+            actionsCell.innerHTML = `
+                <button class="save-btn" onclick="saveRow(this)" data-tooltip="Save Row"><i class="fas fa-save"></i></button>
+                <button class="cancel-btn" onclick="cancelEdit(this)" data-tooltip="Cancel"><i class="fas fa-times"></i></button>
+            `;
+        }
+
+        function cancelEdit(button) {
+            event.stopPropagation();
+            const row = button.closest('tr');
+            if (row.getAttribute('data-new') === 'true') {
+                row.remove();
+            } else {
+                datepickers.forEach(dp => dp.destroy());
+                datepickers = [];
+                updateTable(assessments);
+            }
+        }
+
+        async function saveRow(button) {
+            event.stopPropagation();
+            button.classList.add('loading');
+            button.disabled = true;
+
+            const row = button.closest('tr');
+            const rowId = row.getAttribute('data-rowid');
+            const isNewRow = row.getAttribute('data-new') === 'true';
+            const cells = Array.from(row.children).slice(0, 11);
+            const data = cells.map(cell => cell.querySelector('input, textarea').value);
+
+            if (!data[0] || !data[1] || !data[2]) {
+                alert('Week, Date, and Team Member are required.');
+                button.classList.remove('loading');
+                button.disabled = false;
+                return;
+            }
+            const numericFields = data.slice(3, 8).map(parseFloat);
+            if (numericFields.some(isNaN) || numericFields.some(score => score < 0 || score > 5)) {
+                alert('Scores must be numbers between 0 and 5.');
+                button.classList.remove('loading');
+                button.disabled = false;
+                return;
+            }
+
+            const totalScore = numericFields.reduce((sum, score) => sum + score, 0) / 5;
+            const assessment = {
+                rowId,
+                week: data[0],
+                date: data[1],
+                teamMember: data[2],
+                timelines: numericFields[0],
+                attitude: numericFields[1],
+                thinking: numericFields[2],
+                communication: numericFields[3],
+                knowledge: numericFields[4],
+                totalScore,
+                performance: getPerformanceRating(totalScore),
+                comments: data[10]
+            };
+
+            try {
+                const response = await fetch(`${SHEETDB_API_URL}/rowId/${encodeURIComponent(rowId)}`, {
+                    method: isNewRow ? 'POST' : 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(isNewRow ? [assessment] : assessment)
+                });
+                if (!response.ok) {
+                    let errorMessage = response.statusText;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        console.warn('Failed to parse error response:', e);
+                    }
+                    throw new Error(`Failed to save assessment: ${errorMessage}`);
+                }
+                if (isNewRow) row.removeAttribute('data-new');
+                await loadAssessments();
+                datepickers.forEach(dp => dp.destroy());
+                datepickers = [];
+                button.classList.remove('loading');
+                button.disabled = false;
+                alert('Assessment saved successfully!');
+            } catch (error) {
+                console.error('Error saving assessment:', error);
+                alert(`Failed to save assessment: ${error.message}. Please verify the SheetDB API configuration.`);
+                button.classList.remove('loading');
+                button.disabled = false;
+            }
         }
 
         function updateDropdowns(assessments) {
@@ -435,12 +1021,10 @@
             const exportMonthMenu = document.getElementById('exportMonthMenu');
             const analyticsMonthMenu = document.getElementById('analyticsMonthMenu');
 
-            // Extract unique months
             const months = [...new Set(assessments.map(a => a.date.slice(0, 7)))].sort();
             const weeks = [...new Set(assessments.map(a => a.week))].sort();
             const dates = [...new Set(assessments.map(a => a.date))].sort();
 
-            // Update Best Employee Month Dropdown
             monthMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'bestEmployeeMonth\', \'\')">Select Month</div>';
             months.forEach(month => {
                 const div = document.createElement('div');
@@ -450,7 +1034,6 @@
                 monthMenu.appendChild(div);
             });
 
-            // Update Best Employee Week Dropdown
             weekMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'bestEmployeeWeek\', \'\')">Select Week</div>';
             weeks.forEach(week => {
                 const div = document.createElement('div');
@@ -460,7 +1043,6 @@
                 weekMenu.appendChild(div);
             });
 
-            // Update Best Employee Date Dropdown
             dateMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'bestEmployeeDate\', \'\')">Select Date</div>';
             dates.forEach(date => {
                 const div = document.createElement('div');
@@ -470,7 +1052,6 @@
                 dateMenu.appendChild(div);
             });
 
-            // Update Export Month Dropdown
             exportMonthMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'exportMonth\', \'\')">All Months</div>';
             months.forEach(month => {
                 const div = document.createElement('div');
@@ -480,7 +1061,6 @@
                 exportMonthMenu.appendChild(div);
             });
 
-            // Update Analytics Month Dropdown
             analyticsMonthMenu.innerHTML = '<div class="custom-dropdown-item" onclick="selectDropdownOption(\'analyticsMonth\', \'\')">All Months</div>';
             months.forEach(month => {
                 const div = document.createElement('div');
@@ -497,116 +1077,88 @@
             const selectedDate = document.getElementById('bestEmployeeDateButton').getAttribute('data-value');
             const bestEmployeeDiv = document.getElementById('bestEmployee');
 
-            // Fetch assessments again to ensure fresh data
-            fetch(SHEETDB_API_URL)
-                .then(response => response.json())
-                .then(assessments => {
-                    let filteredAssessments = assessments;
+            let filteredAssessments = assessments;
 
-                    if (selectedMonth) {
-                        filteredAssessments = filteredAssessments.filter(a => a.date.startsWith(selectedMonth));
-                    }
-                    if (selectedWeek) {
-                        filteredAssessments = filteredAssessments.filter(a => a.week === selectedWeek);
-                    }
-                    if (selectedDate) {
-                        filteredAssessments = filteredAssessments.filter(a => a.date === selectedDate);
-                    }
+            if (selectedMonth) {
+                filteredAssessments = filteredAssessments.filter(a => a.date.startsWith(selectedMonth));
+            }
+            if (selectedWeek) {
+                filteredAssessments = filteredAssessments.filter(a => a.week === selectedWeek);
+            }
+            if (selectedDate) {
+                filteredAssessments = filteredAssessments.filter(a => a.date === selectedDate);
+            }
 
-                    if (filteredAssessments.length === 0) {
-                        bestEmployeeDiv.textContent = 'No assessments for the selected filters.';
-                        updateRadarChart([]);
-                        return;
-                    }
+            if (filteredAssessments.length === 0) {
+                bestEmployeeDiv.textContent = 'No assessments for the selected filters.';
+                updateRadarChart([]);
+                return;
+            }
 
-                    const bestAssessment = filteredAssessments.reduce((prev, curr) =>
-                        parseFloat(prev.totalScore) > parseFloat(curr.totalScore) ? prev : curr
-                    );
-                    bestEmployeeDiv.textContent = `Best Employee: ${bestAssessment.teamMember} (Score: ${parseFloat(bestAssessment.totalScore).toFixed(1)})`;
-                    updateRadarChart([bestAssessment]);
-                })
-                .catch(error => {
-                    console.error('Error fetching assessments for best employee:', error);
-                    bestEmployeeDiv.textContent = 'Error loading best employee data.';
-                });
+            const bestAssessment = filteredAssessments.reduce((prev, curr) =>
+                parseFloat(prev.totalScore) > parseFloat(curr.totalScore) ? prev : curr
+            );
+            bestEmployeeDiv.textContent = `Best Employee: ${bestAssessment.teamMember} (Score: ${parseFloat(bestAssessment.totalScore).toFixed(1)})`;
+            updateRadarChart([bestAssessment]);
         }
 
         function exportReport() {
             const selectedMonth = document.getElementById('exportMonthButton').getAttribute('data-value');
-            fetch(SHEETDB_API_URL)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch assessments');
-                    }
-                    return response.json();
-                })
-                .then(assessments => {
-                    let filteredAssessments = assessments;
-                    if (selectedMonth) {
-                        filteredAssessments = assessments.filter(a => a.date.startsWith(selectedMonth));
-                    }
+            const filteredAssessments = selectedMonth ? assessments.filter(a => a.date.startsWith(selectedMonth)) : assessments;
 
-                    if (filteredAssessments.length === 0) {
-                        alert('No data available to export for the selected month.');
-                        return;
-                    }
+            if (filteredAssessments.length === 0) {
+                alert('No data available to export for the selected month.');
+                return;
+            }
 
-                    const headers = [
-                        'Week',
-                        'Date',
-                        'Team Member',
-                        'Project Timelines',
-                        'Attitude',
-                        'Creative/Logical Thinking',
-                        'Communication',
-                        'Knowledge',
-                        'Total Score',
-                        'Performance',
-                        'Comments'
-                    ];
+            const headers = [
+                'Week',
+                'Date',
+                'Team Member',
+                'Project Timelines',
+                'Attitude',
+                'Creative/Logical Thinking',
+                'Communication',
+                'Knowledge',
+                'Total Score',
+                'Performance',
+                'Comments'
+            ];
 
-                    const rows = filteredAssessments.map(assessment => [
-                        assessment.week,
-                        assessment.date,
-                        assessment.teamMember,
-                        assessment.timelines.toFixed(1),
-                        assessment.attitude.toFixed(1),
-                        assessment.thinking.toFixed(1),
-                        assessment.communication.toFixed(1),
-                        assessment.knowledge.toFixed(1),
-                        assessment.totalScore.toFixed(1),
-                        assessment.performance,
-                        `"${assessment.comments.replace(/"/g, '""')}"`
-                    ]);
+            const rows = filteredAssessments.map(assessment => [
+                assessment.week,
+                assessment.date,
+                assessment.teamMember,
+                assessment.timelines.toFixed(1),
+                assessment.attitude.toFixed(1),
+                assessment.thinking.toFixed(1),
+                assessment.communication.toFixed(1),
+                assessment.knowledge.toFixed(1),
+                assessment.totalScore.toFixed(1),
+                assessment.performance,
+                `"${assessment.comments.replace(/"/g, '""')}"`
+            ]);
 
-                    const csvContent = [
-                        headers.join(','),
-                        ...rows.map(row => row.join(','))
-                    ].join('\n');
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.join(','))
+            ].join('\n');
 
-                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement('a');
-                    const url = URL.createObjectURL(blob);
-                    const filename = selectedMonth ? `qa_team_assessment_${selectedMonth}.csv` : 'qa_team_assessment_report.csv';
-                    link.setAttribute('href', url);
-                    link.setAttribute('download', filename);
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                })
-                .catch(error => {
-                    console.error('Error exporting report:', error);
-                    alert('Failed to export report. Please try again.');
-                });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const filename = selectedMonth ? `qa_team_assessment_${selectedMonth}.csv` : 'qa_team_assessment_report.csv';
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function updateCharts(assessments) {
             const selectedMonth = document.getElementById('analyticsMonthButton').getAttribute('data-value');
-            let filteredAssessments = assessments;
-            if (selectedMonth) {
-                filteredAssessments = assessments.filter(a => a.date.startsWith(selectedMonth));
-            }
+            const filteredAssessments = selectedMonth ? assessments.filter(a => a.date.startsWith(selectedMonth)) : assessments;
             updateLineChart(filteredAssessments);
             updateBarChart(filteredAssessments);
         }
